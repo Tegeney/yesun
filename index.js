@@ -50,10 +50,19 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// Launch the bot
-bot.launch()
+// Webhook setup
+const PORT = process.env.PORT || 3000;
+const WEBHOOK_URL = 'https://yesun.onrender.com'; // Your Render webhook URL
+
+// Start the bot using webhooks
+bot.launch({
+  webhook: {
+    domain: WEBHOOK_URL,
+    port: PORT,
+  },
+})
   .then(() => {
-    console.log('Bot is running...');
+    console.log(`Bot is running on port ${PORT}...`);
   })
   .catch((error) => {
     console.error('Failed to start the bot:', error);
