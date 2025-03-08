@@ -1,87 +1,91 @@
-import json
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
-from telegram.constants import ParseMode
+const { Telegraf, Markup } = require('telegraf');
+const axios = require('axios');
 
-# Sample JSON data
-data = {
-  "courses": [
-    {"name": "ENGLISH"},
-    {"name": "MATHEMATICS"},
-    {"name": "GENERAL SCIENCE"},
-    {"name": "SOCIAL SCIENCE"},
-    {"name": "CITIZENSHIP EDUCATION"},
-    {"name": "AMHARIC"}
-  ],
-  "student": {
-    "age": 14,
-    "name": "HANOS TAFESSE ALEMU",
-    "photo": "https://assets.sw.ministry.et/2017/student-photo/1739542829-44705-29217/6002047-0099617.jpeg",
-    "school": "KAFFA CHATOLIC NO2",
-    "woreda": "BONGA",
-    "zone": "KAFA",
-    "language": "Amharic",
-    "gender": "Female",
-    "nationality": "Ethiopian",
-    "stud_info": [
-      ["nationality", "language"],
-      ["zone", "woreda"],
-      ["school"]
-    ]
+// Replace with your actual bot token
+const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
+
+// Initialize the bot
+const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+
+// Conversation states
+const REGISTRATION = 'REGISTRATION';
+const FIRST_NAME = 'FIRST_NAME';
+
+// Store user data temporarily
+const userData = {};
+
+// Start command
+bot.command('start', (ctx) => {
+  ctx.reply('Welcome! Please enter your registration number:');
+  userData[ctx.from.id] = {}; // Initialize user data
+  return ctx.scene.enter(REGISTRATION);
+});
+
+// Handle registration number input
+bot.on('text', (ctx) => {
+  const userId = ctx.from.id;
+  if (!userData[userId]) {
+    return ctx.reply('Please start the conversation with /start.');
+  }
+
+  if (!userData[userId].registrationNumber) {
+    userData[userId].registrationNumber = ctx.message.text;
+    ctx.reply('Thank you! Now, please enter your first name:');
+    return ctx.scene.enter(FIRST_NAME);
+  }
+
+  if (!userData[userId].firstName) {
+    userData[userId].firstName = ctx.message.text;
+    fetchAndDisplayResult(ctx);
+  }
+});
+
+// Fetch and display the result
+async function fetchAndDisplayResult(ctx) {
+  const userId = ctx.from.id;
+  const { registrationNumber, firstName } = userData[userId];
+
+  try {
+    // Construct the URL
+    const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=${firstName}&qr=`;
+
+    // Fetch the result
+    const response = await axios.get(url);
+
+    if (response.status === 200) {
+      const result = response.data;
+
+      // Fetch the student's photo (replace with actual logic)
+      const photoUrl = `https://assets.sw.ministry.et/2017/student-photo/1739542829-44705-29217/6002047-${registrationNumber}.jpeg`;
+
+      // Send the photo
+      await ctx.replyWithPhoto(photoUrl);
+
+      // Format the result with HTML
+      const formattedResult = `
+<b>🎓 Student Information:</b>
+<b>Name:</b> ${firstName}
+<b>Registration Number:</b> ${registrationNumber}
+<b>Result:</b>
+<i>${JSON.stringify(result, null, 2)}</i>
+      `;
+
+      // Send the formatted result
+      await ctx.replyWithHTML(formattedResult);
+    } else {
+      await ctx.reply('Failed to fetch the result. Please check the registration number and first name.');
+    }
+  } catch (error) {
+    await ctx.reply(`An error occurred: ${error.message}`);
+  } finally {
+    // Clear user data
+    delete userData[userId];
   }
 }
 
-def format_student_result(data):
-    """Format the student result into a styled HTML message."""
-    student = data["student"]
-    courses = data["courses"]
+// Launch the bot
+bot.launch();
 
-    # Student Information
-    student_info = (
-        f"<b>🎓 Student Information:</b>\n"
-        f"<b>Name:</b> {student['name']}\n"
-        f"<b>Age:</b> {student['age']}\n"
-        f"<b>Gender:</b> {student['gender']}\n"
-        f"<b>Nationality:</b> {student['nationality']}\n"
-        f"<b>Language:</b> {student['language']}\n"
-        f"<b>School:</b> {student['school']}\n"
-        f"<b>Woreda:</b> {student['woreda']}\n"
-        f"<b>Zone:</b> {student['zone']}\n"
-    )
-
-    # Courses
-    courses_list = "\n".join([f"- {course['name']}" for course in courses])
-    courses_info = f"<b>📚 Courses:</b>\n{courses_list}"
-
-    # Photo
-    photo_info = f"<b>📸 Photo:</b> <a href='{student['photo']}'>View Photo</a>"
-
-    # Combine all sections
-    formatted_result = f"{student_info}\n{courses_info}\n\n{photo_info}"
-    return formatted_result
-
-async def start(update: Update, context: CallbackContext) -> None:
-    """Send the formatted result when the /start command is issued."""
-    formatted_result = format_student_result(data)
-    await update.message.reply_text(formatted_result, parse_mode=ParseMode.HTML)
-
-    # Send the photo separately
-    photo_url = data["student"]["photo"]
-    await update.message.reply_photo(photo=photo_url)
-
-def main() -> None:
-    """Start the bot."""
-    # Replace with your actual bot token
-    TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-
-    # Create the Application and pass it your bot's token.
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-    # Register the /start command handler
-    application.add_handler(CommandHandler("start", start))
-
-    # Start the Bot
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
