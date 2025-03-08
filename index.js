@@ -21,7 +21,11 @@ bot.on('text', async (ctx) => {
     const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=hanos&qr=`;
 
     // Fetch the result
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'TelegramBot/1.0',
+      },
+    });
 
     if (response.status === 200) {
       const result = response.data;
@@ -42,11 +46,17 @@ bot.on('text', async (ctx) => {
 
       // Send the formatted result
       await ctx.replyWithHTML(formattedResult);
+    } else if (response.status === 403) {
+      await ctx.reply('Access denied. Please check your input or try again later.');
     } else {
       await ctx.reply('Failed to fetch the result. Please check the registration number and first name.');
     }
   } catch (error) {
-    await ctx.reply(`An error occurred: ${error.message}`);
+    if (error.response && error.response.status === 403) {
+      await ctx.reply('Access denied. Please check your input or try again later.');
+    } else {
+      await ctx.reply(`An error occurred: ${error.message}`);
+    }
   }
 });
 
