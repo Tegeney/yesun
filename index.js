@@ -1,34 +1,30 @@
 const { Telegraf } = require('telegraf');
-const puppeteer = require('puppeteer-core'); // Use puppeteer-core to manually provide the Chromium executable path
-const fs = require('fs');
+const axios = require('axios');
 const express = require('express');
-require('dotenv').config(); // To load the bot token from the environment variable
+require('dotenv').config();
 
-const bot = new Telegraf(process.env.BOT_TOKEN); // Use the token from the environment variable
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const app = express();
-const port = process.env.PORT || 3000; // Ensure you use the correct port
+const port = process.env.PORT || 3000;
 
-// Set up the webhook endpoint for receiving updates from Telegram
 app.use(express.json());
 
 app.post(`/webhook/${process.env.BOT_TOKEN}`, async (req, res) => {
     try {
         const ctx = req.body;
-        await bot.handleUpdate(ctx); // Pass the incoming update to Telegraf bot
-        res.sendStatus(200); // Respond to Telegram that the update was handled
+        await bot.handleUpdate(ctx);
+        res.sendStatus(200);
     } catch (error) {
         console.error('Error in webhook handler:', error);
         res.sendStatus(500);
     }
 });
 
-// Respond with the welcome message when the bot receives /start command
 bot.start((ctx) => {
-    ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 hanos');
+    ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 Hanos');
 });
 
-// Handle the incoming messages
 bot.on('text', async (ctx) => {
     try {
         const message = ctx.message.text.trim();
@@ -44,30 +40,35 @@ bot.on('text', async (ctx) => {
 
         ctx.reply('Fetching your result, please wait...');
 
-        // Launch puppeteer with headless mode and specify the executable path to Chromium if needed
-        const browser = await puppeteer.launch({
-            headless: "new", // New headless mode for future compatibility
-            executablePath: '/path/to/your/chromium' // Specify the path if using puppeteer-core (set your actual Chromium path here)
-        });
+        const response = await axios.get(resultUrl);
+        const data = response.data;
 
-        const page = await browser.newPage();
-        await page.goto(resultUrl, { waitUntil: 'networkidle2', timeout: 30000 }); // Wait until the page is loaded completely
+        if (!data.student) {
+            return ctx.reply('No results found. Please check your details and try again.');
+        }
 
-        const pageText = await page.evaluate(() => document.body.innerText); // Extract all text content from the page
-        const screenshotPath = `result_${registrationNumber}.png`; // Path to store the screenshot
+        const student = data.student;
+        const courses = data.courses.map(course => course.name).join('\n');
 
-        await page.screenshot({ path: screenshotPath, fullPage: true }); // Capture the screenshot of the result page
+        const resultMessage = `
+Name: ${student.name}
+Age: ${student.age}
+School: ${student.school}
+Woreda: ${student.woreda}
+Zone: ${student.zone}
+Language: ${student.language}
+Gender: ${student.gender}
+Nationality: ${student.nationality}
 
-        await browser.close();
+Courses:
+${courses}
+        `;
 
-        // Send text results to the user
-        ctx.reply(`Exam Results:\n${pageText}`);
+        // Send the student's photo
+        await ctx.replyWithPhoto({ url: student.photo });
 
-        // Send the screenshot to the user
-        await ctx.replyWithPhoto({ source: screenshotPath });
-
-        // Clean up by deleting the screenshot file after sending it
-        fs.unlinkSync(screenshotPath);
+        // Send the result message
+        ctx.reply(resultMessage);
 
     } catch (error) {
         console.error('Error fetching results:', error);
@@ -75,7 +76,6 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// Set webhook for Telegram using Render's URL
 const webhookUrl = `https://yesun.onrender.com/webhook/${process.env.BOT_TOKEN}`;
 bot.telegram.setWebhook(webhookUrl)
     .then(() => {
@@ -85,7 +85,6 @@ bot.telegram.setWebhook(webhookUrl)
         console.error('Error setting webhook:', error);
     });
 
-// Start the Express server to listen for webhook requests
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
