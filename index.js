@@ -1,53 +1,24 @@
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf } = require('telegraf');
 const axios = require('axios');
 
 // Replace with your actual bot token
-const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
+const TELEGRAM_BOT_TOKEN = '789584574:AAGpw0FjzSm2kPTb0wNFNnUY_WDPA7csRL0';
 
 // Initialize the bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-// Conversation states
-const REGISTRATION = 'REGISTRATION';
-const FIRST_NAME = 'FIRST_NAME';
-
-// Store user data temporarily
-const userData = {};
-
 // Start command
 bot.command('start', (ctx) => {
   ctx.reply('Welcome! Please enter your registration number:');
-  userData[ctx.from.id] = {}; // Initialize user data
-  return ctx.scene.enter(REGISTRATION);
 });
 
 // Handle registration number input
-bot.on('text', (ctx) => {
-  const userId = ctx.from.id;
-  if (!userData[userId]) {
-    return ctx.reply('Please start the conversation with /start.');
-  }
-
-  if (!userData[userId].registrationNumber) {
-    userData[userId].registrationNumber = ctx.message.text;
-    ctx.reply('Thank you! Now, please enter your first name:');
-    return ctx.scene.enter(FIRST_NAME);
-  }
-
-  if (!userData[userId].firstName) {
-    userData[userId].firstName = ctx.message.text;
-    fetchAndDisplayResult(ctx);
-  }
-});
-
-// Fetch and display the result
-async function fetchAndDisplayResult(ctx) {
-  const userId = ctx.from.id;
-  const { registrationNumber, firstName } = userData[userId];
+bot.on('text', async (ctx) => {
+  const registrationNumber = ctx.message.text;
 
   try {
     // Construct the URL
-    const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=${firstName}&qr=`;
+    const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=hanos&qr=`;
 
     // Fetch the result
     const response = await axios.get(url);
@@ -64,7 +35,6 @@ async function fetchAndDisplayResult(ctx) {
       // Format the result with HTML
       const formattedResult = `
 <b>🎓 Student Information:</b>
-<b>Name:</b> ${firstName}
 <b>Registration Number:</b> ${registrationNumber}
 <b>Result:</b>
 <i>${JSON.stringify(result, null, 2)}</i>
@@ -77,14 +47,17 @@ async function fetchAndDisplayResult(ctx) {
     }
   } catch (error) {
     await ctx.reply(`An error occurred: ${error.message}`);
-  } finally {
-    // Clear user data
-    delete userData[userId];
   }
-}
+});
 
 // Launch the bot
-bot.launch();
+bot.launch()
+  .then(() => {
+    console.log('Bot is running...');
+  })
+  .catch((error) => {
+    console.error('Failed to start the bot:', error);
+  });
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
