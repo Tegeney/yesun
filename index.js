@@ -7,6 +7,21 @@ const TELEGRAM_BOT_TOKEN = '789584574:AAGpw0FjzSm2kPTb0wNFNnUY_WDPA7csRL0';
 // Initialize the bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
+// Function to fetch cookies and CSRF token
+const fetchCookiesAndToken = async () => {
+  const response = await axios.get('https://sw.ministry.et/', {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
+    },
+  });
+
+  const cookies = response.headers['set-cookie'];
+  const xsrfToken = cookies.find((cookie) => cookie.startsWith('XSRF-TOKEN')).split(';')[0];
+  const sessionCookie = cookies.find((cookie) => cookie.startsWith('ministry_rostering_and_management_system_session')).split(';')[0];
+
+  return { xsrfToken, sessionCookie };
+};
+
 // Start command
 bot.command('start', (ctx) => {
   ctx.reply('Welcome! Please enter your registration number:');
@@ -17,6 +32,9 @@ bot.on('text', async (ctx) => {
   const registrationNumber = ctx.message.text;
 
   try {
+    // Fetch fresh cookies and CSRF token
+    const { xsrfToken, sessionCookie } = await fetchCookiesAndToken();
+
     // Construct the URL
     const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=hanos&qr=`;
 
@@ -28,7 +46,7 @@ bot.on('text', async (ctx) => {
         'Accept-Encoding': 'gzip, deflate, br, zstd',
         'Accept-Language': 'en-US,en;q=0.9',
         'Connection': 'keep-alive',
-        'Cookie': 'XSRF-TOKEN=eyJpdiI6InZBcmlTbjBMbnJSa3o4eE1PQlZHZFE9PSIsInZhbHVlIjoiWEtFdUg2VGdscWJJci8yK3lwNWFTTVFvOEZvUUFOMzFmbEpoblBWY1hxWTNPK1g2M2FIem9leURoMkFsRUFtQTYzNkV4MWlpM3pnQkRBaE1sdWdFRUtMMnRpcUFBT1gzT2JwZ3Z0Z0RGZmFyY2VxVXZCc3ZKY1V1NFJBYzBsNGMiLCJtYWMiOiJjM2E5YjU1Y2I5OTE0MTRmOTVmNmJiMzk3ZTliOWJkOGJhZWNkMmQ2YzdlMTZmNTkzNjllMzE0ZTMyZTljNTg1IiwidGFnIjoiIn0%3D; ministry_rostering_and_management_system_session=eyJpdiI6Im5MRExuckRNb1QyWHVtbnhkOXhRUGc9PSIsInZhbHVlIjoidk1qa3ZCTUlEWElacmFXa29RU0ZpdUdGTGc5a09CdjcvdG1HZU9XYXNpMHRBeVc2Q0ZZb1I4c0w0NzFGR2ZMbHNxd2w4ZW1DSzlPNGp2Y21aNHR6N3NCYUtBdVBibGlCblZrNjZFRVpJbllMSnFLNVpZMHFLV2tTcjBGeXJPSkciLCJtYWMiOiIzZmJkNjMzNzM3MGY0NTFhNWUwMGNjM2Y4OTllYjlkMjM1Y2JjODBmMDM4NjJmODM2ZDMxNTcxNzE1MTExNTAxIiwidGFnIjoiIn0%3D',
+        'Cookie': `${xsrfToken}; ${sessionCookie}`,
         'Host': 'sw.ministry.et',
         'Referer': 'https://sw.ministry.et/',
         'Sec-Ch-Ua': '"Chromium";v="134", "Not:A-Brand";v="24", "Microsoft Edge";v="134"',
@@ -37,7 +55,7 @@ bot.on('text', async (ctx) => {
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin',
-        'X-XSRF-TOKEN': 'eyJpdiI6InZBcmlTbjBMbnJSa3o4eE1PQlZHZFE9PSIsInZhbHVlIjoiWEtFdUg2VGdscWJJci8yK3lwNWFTTVFvOEZvUUFOMzFmbEpoblBWY1hxWTNPK1g2M2FIem9leURoMkFsRUFtQTYzNkV4MWlpM3pnQkRBaE1sdWdFRUtMMnRpcUFBT1gzT2JwZ3Z0Z0RGZmFyY2VxVXZCc3ZKY1V1NFJBYzBsNGMiLCJtYWMiOiJjM2E5YjU1Y2I5OTE0MTRmOTVmNmJiMzk3ZTliOWJkOGJhZWNkMmQ2YzdlMTZmNTkzNjllMzE0ZTMyZTljNTg1IiwidGFnIjoiIn0=',
+        'X-XSRF-TOKEN': xsrfToken.split('=')[1],
       },
     });
 
