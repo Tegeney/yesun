@@ -1,90 +1,87 @@
-const { Telegraf } = require('telegraf');
-const axios = require('axios');
-const express = require('express');
-require('dotenv').config();
+import json
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
+from telegram.constants import ParseMode
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+# Sample JSON data
+data = {
+  "courses": [
+    {"name": "ENGLISH"},
+    {"name": "MATHEMATICS"},
+    {"name": "GENERAL SCIENCE"},
+    {"name": "SOCIAL SCIENCE"},
+    {"name": "CITIZENSHIP EDUCATION"},
+    {"name": "AMHARIC"}
+  ],
+  "student": {
+    "age": 14,
+    "name": "HANOS TAFESSE ALEMU",
+    "photo": "https://assets.sw.ministry.et/2017/student-photo/1739542829-44705-29217/6002047-0099617.jpeg",
+    "school": "KAFFA CHATOLIC NO2",
+    "woreda": "BONGA",
+    "zone": "KAFA",
+    "language": "Amharic",
+    "gender": "Female",
+    "nationality": "Ethiopian",
+    "stud_info": [
+      ["nationality", "language"],
+      ["zone", "woreda"],
+      ["school"]
+    ]
+  }
+}
 
-const app = express();
-const port = process.env.PORT || 3000;
+def format_student_result(data):
+    """Format the student result into a styled HTML message."""
+    student = data["student"]
+    courses = data["courses"]
 
-app.use(express.json());
+    # Student Information
+    student_info = (
+        f"<b>🎓 Student Information:</b>\n"
+        f"<b>Name:</b> {student['name']}\n"
+        f"<b>Age:</b> {student['age']}\n"
+        f"<b>Gender:</b> {student['gender']}\n"
+        f"<b>Nationality:</b> {student['nationality']}\n"
+        f"<b>Language:</b> {student['language']}\n"
+        f"<b>School:</b> {student['school']}\n"
+        f"<b>Woreda:</b> {student['woreda']}\n"
+        f"<b>Zone:</b> {student['zone']}\n"
+    )
 
-app.post(`/webhook/${process.env.BOT_TOKEN}`, async (req, res) => {
-    try {
-        const ctx = req.body;
-        await bot.handleUpdate(ctx);
-        res.sendStatus(200);
-    } catch (error) {
-        console.error('Error in webhook handler:', error);
-        res.sendStatus(500);
-    }
-});
+    # Courses
+    courses_list = "\n".join([f"- {course['name']}" for course in courses])
+    courses_info = f"<b>📚 Courses:</b>\n{courses_list}"
 
-bot.start((ctx) => {
-    ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 Hanos');
-});
+    # Photo
+    photo_info = f"<b>📸 Photo:</b> <a href='{student['photo']}'>View Photo</a>"
 
-bot.on('text', async (ctx) => {
-    try {
-        const message = ctx.message.text.trim();
-        const parts = message.split(' ');
+    # Combine all sections
+    formatted_result = f"{student_info}\n{courses_info}\n\n{photo_info}"
+    return formatted_result
 
-        if (parts.length !== 2) {
-            return ctx.reply('Invalid format. Please send: RegistrationNumber FirstName');
-        }
+async def start(update: Update, context: CallbackContext) -> None:
+    """Send the formatted result when the /start command is issued."""
+    formatted_result = format_student_result(data)
+    await update.message.reply_text(formatted_result, parse_mode=ParseMode.HTML)
 
-        const registrationNumber = parts[0];
-        const firstName = parts[1];
-        const resultUrl = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=${firstName}&qr=`;
+    # Send the photo separately
+    photo_url = data["student"]["photo"]
+    await update.message.reply_photo(photo=photo_url)
 
-        ctx.reply('Fetching your result, please wait...');
+def main() -> None:
+    """Start the bot."""
+    # Replace with your actual bot token
+    TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
 
-        const response = await axios.get(resultUrl);
-        const data = response.data;
+    # Create the Application and pass it your bot's token.
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-        if (!data.student) {
-            return ctx.reply('No results found. Please check your details and try again.');
-        }
+    # Register the /start command handler
+    application.add_handler(CommandHandler("start", start))
 
-        const student = data.student;
-        const courses = data.courses.map(course => course.name).join('\n');
+    # Start the Bot
+    application.run_polling()
 
-        const resultMessage = `
-Name: ${student.name}
-Age: ${student.age}
-School: ${student.school}
-Woreda: ${student.woreda}
-Zone: ${student.zone}
-Language: ${student.language}
-Gender: ${student.gender}
-Nationality: ${student.nationality}
-
-Courses:
-${courses}
-        `;
-
-        // Send the student's photo
-        await ctx.replyWithPhoto({ url: student.photo });
-
-        // Send the result message
-        ctx.reply(resultMessage);
-
-    } catch (error) {
-        console.error('Error fetching results:', error);
-        ctx.reply('Failed to fetch results. Please check your details and try again.');
-    }
-});
-
-const webhookUrl = `https://yesun.onrender.com/webhook/${process.env.BOT_TOKEN}`;
-bot.telegram.setWebhook(webhookUrl)
-    .then(() => {
-        console.log('Webhook is set successfully');
-    })
-    .catch(error => {
-        console.error('Error setting webhook:', error);
-    });
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+if __name__ == "__main__":
+    main()
