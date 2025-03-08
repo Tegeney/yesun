@@ -20,10 +20,24 @@ bot.on('text', async (ctx) => {
     // Construct the URL
     const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=hanos&qr=`;
 
-    // Fetch the result
+    // Fetch the result with authentication headers
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'TelegramBot/1.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Cookie': 'XSRF-TOKEN=eyJpdiI6InZBcmlTbjBMbnJSa3o4eE1PQlZHZFE9PSIsInZhbHVlIjoiWEtFdUg2VGdscWJJci8yK3lwNWFTTVFvOEZvUUFOMzFmbEpoblBWY1hxWTNPK1g2M2FIem9leURoMkFsRUFtQTYzNkV4MWlpM3pnQkRBaE1sdWdFRUtMMnRpcUFBT1gzT2JwZ3Z0Z0RGZmFyY2VxVXZCc3ZKY1V1NFJBYzBsNGMiLCJtYWMiOiJjM2E5YjU1Y2I5OTE0MTRmOTVmNmJiMzk3ZTliOWJkOGJhZWNkMmQ2YzdlMTZmNTkzNjllMzE0ZTMyZTljNTg1IiwidGFnIjoiIn0%3D; ministry_rostering_and_management_system_session=eyJpdiI6Im5MRExuckRNb1QyWHVtbnhkOXhRUGc9PSIsInZhbHVlIjoidk1qa3ZCTUlEWElacmFXa29RU0ZpdUdGTGc5a09CdjcvdG1HZU9XYXNpMHRBeVc2Q0ZZb1I4c0w0NzFGR2ZMbHNxd2w4ZW1DSzlPNGp2Y21aNHR6N3NCYUtBdVBibGlCblZrNjZFRVpJbllMSnFLNVpZMHFLV2tTcjBGeXJPSkciLCJtYWMiOiIzZmJkNjMzNzM3MGY0NTFhNWUwMGNjM2Y4OTllYjlkMjM1Y2JjODBmMDM4NjJmODM2ZDMxNTcxNzE1MTExNTAxIiwidGFnIjoiIn0%3D',
+        'Host': 'sw.ministry.et',
+        'Referer': 'https://sw.ministry.et/',
+        'Sec-Ch-Ua': '"Chromium";v="134", "Not:A-Brand";v="24", "Microsoft Edge";v="134"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'X-XSRF-TOKEN': 'eyJpdiI6InZBcmlTbjBMbnJSa3o4eE1PQlZHZFE9PSIsInZhbHVlIjoiWEtFdUg2VGdscWJJci8yK3lwNWFTTVFvOEZvUUFOMzFmbEpoblBWY1hxWTNPK1g2M2FIem9leURoMkFsRUFtQTYzNkV4MWlpM3pnQkRBaE1sdWdFRUtMMnRpcUFBT1gzT2JwZ3Z0Z0RGZmFyY2VxVXZCc3ZKY1V1NFJBYzBsNGMiLCJtYWMiOiJjM2E5YjU1Y2I5OTE0MTRmOTVmNmJiMzk3ZTliOWJkOGJhZWNkMmQ2YzdlMTZmNTkzNjllMzE0ZTMyZTljNTg1IiwidGFnIjoiIn0=',
       },
     });
 
