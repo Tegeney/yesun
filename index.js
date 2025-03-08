@@ -73,7 +73,7 @@ bot.on('text', async (ctx) => {
 <b>🎓 Student Information:</b>
 <b>Registration Number:</b> ${registrationNumber}
 <b>Result:</b>
-<i>${JSON.stringify(result, null, 2)}</i>
+<pre>${JSON.stringify(result, null, 2)}</pre>
       `;
 
       // Send the formatted result
