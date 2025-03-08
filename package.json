@@ -1,11 +1,14 @@
 {
   "name": "telegram-bot",
   "version": "1.0.0",
+  "description": "A hybrid Python and Node.js Telegram bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start-python": "python bot.py"
   },
   "dependencies": {
-    "telegraf": "^4.12.0"
+    "telegraf": "^4.12.0",
+    "axios": "^1.5.0"
   }
 }
