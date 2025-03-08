@@ -1,14 +1,34 @@
 const { Telegraf } = require('telegraf');
 const puppeteer = require('puppeteer-core'); // Use puppeteer-core to manually provide the Chromium executable path
 const fs = require('fs');
+const express = require('express');
 require('dotenv').config(); // To load the bot token from the environment variable
 
 const bot = new Telegraf(process.env.BOT_TOKEN); // Use the token from the environment variable
 
+const app = express();
+const port = process.env.PORT || 3000; // Ensure you use the correct port
+
+// Set up the webhook endpoint for receiving updates from Telegram
+app.use(express.json());
+
+app.post(`/webhook/${process.env.BOT_TOKEN}`, async (req, res) => {
+    try {
+        const ctx = req.body;
+        await bot.handleUpdate(ctx); // Pass the incoming update to Telegraf bot
+        res.sendStatus(200); // Respond to Telegram that the update was handled
+    } catch (error) {
+        console.error('Error in webhook handler:', error);
+        res.sendStatus(500);
+    }
+});
+
+// Respond with the welcome message when the bot receives /start command
 bot.start((ctx) => {
     ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 hanos');
 });
 
+// Handle the incoming messages
 bot.on('text', async (ctx) => {
     try {
         const message = ctx.message.text.trim();
@@ -55,6 +75,17 @@ bot.on('text', async (ctx) => {
     }
 });
 
-bot.launch()
-    .then(() => console.log('Bot is running...'))
-    .catch(error => console.error('Error launching bot:', error));
+// Set webhook for Telegram using Render's URL
+const webhookUrl = `https://yesun.onrender.com/webhook/${process.env.BOT_TOKEN}`;
+bot.telegram.setWebhook(webhookUrl)
+    .then(() => {
+        console.log('Webhook is set successfully');
+    })
+    .catch(error => {
+        console.error('Error setting webhook:', error);
+    });
+
+// Start the Express server to listen for webhook requests
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
