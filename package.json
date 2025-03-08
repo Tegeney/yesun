@@ -10,5 +10,7 @@
   "dependencies": {
     "telegraf": "^4.12.0",
     "axios": "^1.5.0"
+     "puppeteer": "^22.0.0"
+    
   }
 }
