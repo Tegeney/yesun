@@ -1,9 +1,10 @@
 const { Telegraf } = require('telegraf');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-require('dotenv').config(); // To load the bot token from an environment variable
+require('dotenv').config(); // To load the bot token from the environment variable
 
-const bot = new Telegraf(process.env.BOT_TOKEN); // Use the token from the environment variable
+// Use the token from the environment variable
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
     ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 hanos');
@@ -30,4 +31,28 @@ bot.on('text', async (ctx) => {
         await page.goto(resultUrl, { waitUntil: 'networkidle2', timeout: 30000 }); // Add timeout for slow loading pages
 
         // Extract all text from the page
-        const pageText = await page.evaluate(() => document.body.innerTex
+        const pageText = await page.evaluate(() => document.body.innerText);
+
+        // Take a screenshot
+        const screenshotPath = `result_${registrationNumber}.png`;
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+
+        await browser.close();
+
+        // Send text results
+        ctx.reply(`Exam Results:\n${pageText}`);
+
+        // Send screenshot
+        await ctx.replyWithPhoto({ source: screenshotPath });
+
+        // Delete the screenshot after sending
+        fs.unlinkSync(screenshotPath);
+    } catch (error) {
+        console.error('Error fetching results:', error);
+        ctx.reply('Failed to fetch results. Please check your details and try again.');
+    }
+});
+
+bot.launch()
+    .then(() => console.log('Bot is running...'))
+    .catch(error => console.error('Error launching bot:', error));
