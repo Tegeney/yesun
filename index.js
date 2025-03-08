@@ -7,11 +7,29 @@ const TELEGRAM_BOT_TOKEN = '789584574:AAGpw0FjzSm2kPTb0wNFNnUY_WDPA7csRL0';
 // Initialize the bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-// Function to fetch cookies and CSRF token
-const fetchCookiesAndToken = async () => {
-  const response = await axios.get('https://sw.ministry.et/', {
+// Function to simulate login and fetch cookies and CSRF token
+const simulateLogin = async () => {
+  const loginUrl = 'https://sw.ministry.et/login'; // Replace with the actual login URL
+  const loginData = {
+    email: 'your-email@example.com', // Replace with your login credentials
+    password: 'your-password', // Replace with your login credentials
+  };
+
+  const response = await axios.post(loginUrl, loginData, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Connection': 'keep-alive',
+      'Host': 'sw.ministry.et',
+      'Referer': 'https://sw.ministry.et/',
+      'Sec-Ch-Ua': '"Chromium";v="134", "Not:A-Brand";v="24", "Microsoft Edge";v="134"',
+      'Sec-Ch-Ua-Mobile': '?0',
+      'Sec-Ch-Ua-Platform': '"Windows"',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-origin',
     },
   });
 
@@ -32,8 +50,8 @@ bot.on('text', async (ctx) => {
   const registrationNumber = ctx.message.text;
 
   try {
-    // Fetch fresh cookies and CSRF token
-    const { xsrfToken, sessionCookie } = await fetchCookiesAndToken();
+    // Simulate login and fetch fresh cookies and CSRF token
+    const { xsrfToken, sessionCookie } = await simulateLogin();
 
     // Construct the URL
     const url = `https://sw.ministry.et/student-result/${registrationNumber}?first_name=hanos&qr=`;
