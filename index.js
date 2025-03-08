@@ -1,8 +1,11 @@
+require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
 
 // Replace with your actual bot token
-const TELEGRAM_BOT_TOKEN = '789584574:AAGpw0FjzSm2kPTb0wNFNnUY_WDPA7csRL0';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const EMAIL = process.env.EMAIL;
+const PASSWORD = process.env.PASSWORD;
 
 // Initialize the bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
@@ -11,15 +14,15 @@ const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 const simulateLogin = async () => {
   const loginUrl = 'https://sw.ministry.et/login'; // Replace with the actual login URL
   const loginData = {
-    email: 'your-email@example.com', // Replace with actual credentials
-    password: 'your-password', // Replace with actual credentials
+    email: EMAIL, // Use environment variable
+    password: PASSWORD, // Use environment variable
   };
 
   try {
     // Making login request to get the session cookies
     const response = await axios.post(loginUrl, loginData, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
+        'User -Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Encoding': 'gzip, deflate, br, zstd',
         'Accept-Language': 'en-US,en;q=0.9',
@@ -33,7 +36,7 @@ const simulateLogin = async () => {
     });
 
     // Log the headers and cookies to see if we get the expected ones
-    console.log('Login Response:', response.headers);
+    console.log('Login Response:', response.status, response.data);
     
     // Capture cookies for the session and CSRF token
     const cookies = response.headers['set-cookie'];
@@ -70,7 +73,7 @@ bot.on('text', async (ctx) => {
     // Fetch the result using the captured cookies and token
     const response = await axios.get(resultUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
+        'User -Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Encoding': 'gzip, deflate, br, zstd',
         'Accept-Language': 'en-US,en;q=0.9',
@@ -102,11 +105,19 @@ bot.on('text', async (ctx) => {
     }
   } catch (error) {
     // Log error details for debugging
-    console.error('Error fetching result:', error);
-    if (error.response && error.response.status === 403) {
-      await ctx.reply('Access denied. Please check your input or try again later.');
+    console.error('Error fetching result:', error.response ? error.response.data : error.message);
+    
+    if (error.response) {
+      console.error('Response Status:', error.response.status);
+      console.error('Response Headers:', error.response.headers);
+      
+      if (error.response.status === 403) {
+        await ctx.reply('Access denied. Please check your input or try again later.');
+      } else {
+        await ctx.reply('An error occurred while fetching the result. Please try again later.');
+      }
     } else {
-      await ctx.reply('An error occurred. Please try again later.');
+      await ctx.reply('An unexpected error occurred. Please try again later.');
     }
   }
 });
@@ -115,4 +126,3 @@ bot.on('text', async (ctx) => {
 bot.launch()
   .then(() => console.log('Bot is running...'))
   .catch((error) => console.error('Error starting bot:', error));
-
