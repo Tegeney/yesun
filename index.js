@@ -1,10 +1,9 @@
 const { Telegraf } = require('telegraf');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core'); // Use puppeteer-core to manually provide the Chromium executable path
 const fs = require('fs');
 require('dotenv').config(); // To load the bot token from the environment variable
 
-// Use the token from the environment variable
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(process.env.BOT_TOKEN); // Use the token from the environment variable
 
 bot.start((ctx) => {
     ctx.reply('Welcome! Send your registration number and first name in this format:\n0099617 hanos');
@@ -25,28 +24,31 @@ bot.on('text', async (ctx) => {
 
         ctx.reply('Fetching your result, please wait...');
 
-        const browser = await puppeteer.launch({ headless: true });
+        // Launch puppeteer with headless mode and specify the executable path to Chromium if needed
+        const browser = await puppeteer.launch({
+            headless: "new", // New headless mode for future compatibility
+            executablePath: '/path/to/your/chromium' // Specify the path if using puppeteer-core (set your actual Chromium path here)
+        });
+
         const page = await browser.newPage();
+        await page.goto(resultUrl, { waitUntil: 'networkidle2', timeout: 30000 }); // Wait until the page is loaded completely
 
-        await page.goto(resultUrl, { waitUntil: 'networkidle2', timeout: 30000 }); // Add timeout for slow loading pages
+        const pageText = await page.evaluate(() => document.body.innerText); // Extract all text content from the page
+        const screenshotPath = `result_${registrationNumber}.png`; // Path to store the screenshot
 
-        // Extract all text from the page
-        const pageText = await page.evaluate(() => document.body.innerText);
-
-        // Take a screenshot
-        const screenshotPath = `result_${registrationNumber}.png`;
-        await page.screenshot({ path: screenshotPath, fullPage: true });
+        await page.screenshot({ path: screenshotPath, fullPage: true }); // Capture the screenshot of the result page
 
         await browser.close();
 
-        // Send text results
+        // Send text results to the user
         ctx.reply(`Exam Results:\n${pageText}`);
 
-        // Send screenshot
+        // Send the screenshot to the user
         await ctx.replyWithPhoto({ source: screenshotPath });
 
-        // Delete the screenshot after sending
+        // Clean up by deleting the screenshot file after sending it
         fs.unlinkSync(screenshotPath);
+
     } catch (error) {
         console.error('Error fetching results:', error);
         ctx.reply('Failed to fetch results. Please check your details and try again.');
