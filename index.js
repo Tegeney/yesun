@@ -77,6 +77,9 @@ bot.on('text', async (ctx) => {
       },
     });
 
+    // Log the entire response for debugging
+    console.log('Response Data:', response.data);
+
     if (response.status === 200) {
       const result = response.data;
 
@@ -102,6 +105,9 @@ bot.on('text', async (ctx) => {
       await ctx.reply('Failed to fetch the result. Please check the registration number and first name.');
     }
   } catch (error) {
+    // Log the error for debugging
+    console.error('Error fetching result:', error);
+
     if (error.response && error.response.status === 403) {
       await ctx.reply('Access denied. Please check your input or try again later.');
     } else {
