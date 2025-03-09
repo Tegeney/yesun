@@ -1,16 +1,23 @@
 {
-     "name": "my-app",
-     "version": "1.0.0",
-     "description": "My awesome app",
-     "main": "index.js",
-     "scripts": {
-       "start": "node index.js",
-       "test": "echo \"Error: no test specified\" && exit 1"
-     },
-     "dependencies": {
-       "express": "^4.17.1",
-       "puppeteer": "^19.0.0"
-     },
-     "author": "Your Name",
-     "license": "MIT"
+  "name": "puppeteer-render-app",
+  "version": "1.0.0",
+  "description": "A Node.js app using Puppeteer for web scraping, deployed on Render.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": [
+    "puppeteer",
+    "web scraping",
+    "render"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }
