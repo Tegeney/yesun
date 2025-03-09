@@ -1,16 +1,16 @@
 {
-  "name": "telegram-bot",
-  "version": "1.0.0",
-  "description": "A hybrid Python and Node.js Telegram bot",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "start-python": "python bot.py"
-  },
-  "dependencies": {
-    "telegraf": "^4.12.0",
-    "axios": "^1.5.0"
-     "puppeteer": "^22.0.0"
-    
-  }
+     "name": "my-app",
+     "version": "1.0.0",
+     "description": "My awesome app",
+     "main": "index.js",
+     "scripts": {
+       "start": "node index.js",
+       "test": "echo \"Error: no test specified\" && exit 1"
+     },
+     "dependencies": {
+       "express": "^4.17.1",
+       "puppeteer": "^19.0.0"
+     },
+     "author": "Your Name",
+     "license": "MIT"
 }
