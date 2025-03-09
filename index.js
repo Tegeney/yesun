@@ -7,6 +7,9 @@ const scrapeResultAndScreenshot = async (registrationNumber, firstName) => {
     browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
+    // Set user-agent to mimic a real browser
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
     // Go to the result page
     await page.goto(`https://sw.ministry.et/student-result/${registrationNumber}?first_name=${firstName}&qr=`, {
       waitUntil: 'domcontentloaded',
@@ -21,13 +24,15 @@ const scrapeResultAndScreenshot = async (registrationNumber, firstName) => {
       return resultElement ? resultElement.textContent.trim() : 'Result not found';
     });
 
-    // Save the result as a text file
-    fs.writeFileSync('exam-result.txt', result);
+    // Save the result as a text file with dynamic naming
+    const resultFileName = `exam-result-${registrationNumber}.txt`;
+    fs.writeFileSync(resultFileName, result);
     console.log('Exam Result:', result);
 
-    // Take a screenshot of the page
-    await page.screenshot({ path: 'result-screenshot.png' });
-    console.log('Screenshot saved as result-screenshot.png');
+    // Take a screenshot of the page with dynamic naming
+    const screenshotFileName = `result-screenshot-${registrationNumber}.png`;
+    await page.screenshot({ path: screenshotFileName });
+    console.log(`Screenshot saved as ${screenshotFileName}`);
 
   } catch (error) {
     console.error('Error:', error);
